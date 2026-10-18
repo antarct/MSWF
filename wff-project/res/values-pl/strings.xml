@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="watch_face_name">Fumé Emerald</string>
+    <string name="theme_label">Styl Tarczy</string>
+    <string name="theme_dynamic">Żywy Szmaragd (Aktywność)</string>
+    <string name="theme_emerald">Zawsze Szmaragd</string>
+    <string name="theme_onyx">Czysty Onyks</string>
+    <string name="complication_6h">Dolna subtarcza (6H)</string>
+    <string name="complication_9h">Lewa subtarcza (9H)</string>
+    <string name="subdial_6h_label">Styl subtarczy 6H</string>
+    <string name="subdial_6h_delta">Ikoniczna Delta (Bateria)</string>
+    <string name="subdial_6h_complication">Dowolna komplikacja</string>
+    <string name="subdial_9h_label">Styl subtarczy 9H</string>
+    <string name="subdial_9h_solar">Ikoniczny Solar (Doba)</string>
+    <string name="subdial_9h_complication">Dowolna komplikacja</string>
+</resources>

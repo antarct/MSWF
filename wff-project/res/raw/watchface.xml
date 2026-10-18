@@ -1,0 +1,528 @@
+<?xml version="1.0" encoding="utf-8"?>
+<WatchFace width="466" height="466">
+    <Metadata key="CLOCK_TYPE" value="ANALOG" />
+    <Metadata key="PREVIEW_TIME" value="10:10:30" />
+
+    <UserConfigurations>
+        <ListConfiguration id="dialTheme" displayName="@string/theme_label" defaultValue="0">
+            <ListOption id="0" displayName="@string/theme_dynamic" />
+            <ListOption id="1" displayName="@string/theme_emerald" />
+            <ListOption id="2" displayName="@string/theme_onyx" />
+        </ListConfiguration>
+        <ListConfiguration id="subdial6h" displayName="@string/subdial_6h_label" defaultValue="0">
+            <ListOption id="0" displayName="@string/subdial_6h_delta" />
+            <ListOption id="1" displayName="@string/subdial_6h_complication" />
+        </ListConfiguration>
+        <ListConfiguration id="subdial9h" displayName="@string/subdial_9h_label" defaultValue="1">
+            <ListOption id="0" displayName="@string/subdial_9h_solar" />
+            <ListOption id="1" displayName="@string/subdial_9h_complication" />
+        </ListConfiguration>
+    </UserConfigurations>
+
+    <Scene backgroundColor="#000000">
+        <!-- 1. Deep Black Base Layer (AOD: Batons and MS Monogram) -->
+        <PartImage x="0" y="0" width="466" height="466">
+            <Image resource="@drawable/dial_bg_aod" />
+        </PartImage>
+
+        <!-- 2. Active Mode Dial Theme Layer -->
+        <ListConfiguration id="dialTheme">
+            <!-- Option 0: Living Emerald (Dynamic bloom with activity progress!) -->
+            <ListOption id="0">
+                <PartImage x="0" y="0" width="466" height="466">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="(1 - [IS_AMBIENT]) * clamp(round(75 + [STEP_PERCENT] * 1.8), 75, 255)" />
+                    <Image resource="@drawable/dial_bg_emerald" />
+                </PartImage>
+            </ListOption>
+            <!-- Option 1: Always 100% Emerald (Full bloom all day!) -->
+            <ListOption id="1">
+                <PartImage x="0" y="0" width="466" height="466">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="(1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="@drawable/dial_bg_emerald" />
+                </PartImage>
+            </ListOption>
+            <!-- Option 2: Pure Onyx AMOLED (Smoking black dial) -->
+            <ListOption id="2">
+                <PartImage x="0" y="0" width="466" height="466">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="(1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="@drawable/dial_bg_onyx" />
+                </PartImage>
+            </ListOption>
+        </ListConfiguration>
+
+        <!-- 3. Dynamic Swiss Super-LumiNova Seconds Arc (Sweeps 0 to [SECOND] * 6) -->
+        <PartDraw x="0" y="0" width="466" height="466">
+            <Variant mode="AMBIENT" target="alpha" value="0" />
+            <Transform target="alpha" value="(1 - [IS_AMBIENT]) * 255" />
+            <Arc centerX="233" centerY="233" width="460" height="460" startAngle="0" endAngle="0" direction="CLOCKWISE">
+                <Transform target="endAngle" value="(1 - [IS_AMBIENT]) * [SECOND] * 6" />
+                <Stroke color="#ffffff" thickness="12" cap="BUTT" />
+            </Arc>
+        </PartDraw>
+        <!-- Ticks Mask: Black wedges between ticks, transparent holes where ticks are -->
+        <PartImage x="0" y="0" width="466" height="466">
+            <Variant mode="AMBIENT" target="alpha" value="0" />
+            <Transform target="alpha" value="(1 - [IS_AMBIENT]) * 255" />
+            <Image resource="@drawable/ticks_mask" />
+        </PartImage>
+
+        <!-- 4. Bespoke 6H Battery Arc & Delta (Active when subdial6h == 0) -->
+        <PartDraw x="169" y="279" width="128" height="128">
+            <Variant mode="AMBIENT" target="alpha" value="0" />
+            <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 0) * (1 - [IS_AMBIENT]) * 255" />
+            <Arc centerX="64" centerY="64" width="108" height="108" startAngle="0" endAngle="0" direction="CLOCKWISE">
+                <Transform target="endAngle" value="[BATTERY_PERCENT] * 3.6" />
+                <Stroke color="#e2e8f0" thickness="13" cap="BUTT" />
+            </Arc>
+        </PartDraw>
+        <!-- 6H Slits & Delta Icon Overlay -->
+        <PartImage x="169" y="279" width="128" height="128">
+            <Variant mode="AMBIENT" target="alpha" value="0" />
+            <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 0) * (1 - [IS_AMBIENT]) * 255" />
+            <Image resource="@drawable/subdial_slits" />
+        </PartImage>
+        <!-- 6H Battery Telemetry (.25 format, hidden at 100%) -->
+        <Condition>
+            <Expressions>
+                <Expression name="show_batt_num"><![CDATA[[BATTERY_PERCENT] < 100]]></Expression>
+            </Expressions>
+            <Compare expression="show_batt_num">
+                <PartText x="169" y="348" width="128" height="28">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 0) * (1 - [IS_AMBIENT]) * 255" />
+                    <Text align="CENTER">
+                        <Font family="montserrat_bold" size="21" color="#ffffff">
+                            <Template><![CDATA[.%02d]]>
+                                <Parameter expression="[BATTERY_PERCENT]" />
+                            </Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Compare>
+        </Condition>
+
+        <!-- Dynamic 6H Complication Slot (Active when subdial6h == 1, Default: WATCH_BATTERY) -->
+        <ComplicationSlot slotId="1"
+            displayName="@string/complication_6h"
+            x="169" y="279" width="128" height="128"
+            supportedTypes="RANGED_VALUE GOAL_PROGRESS SHORT_TEXT MONOCHROMATIC_IMAGE SMALL_IMAGE EMPTY"
+            isCustomizable="true">
+            <BoundingOval x="0" y="0" width="128" height="128" />
+            <DefaultProviderPolicy defaultSystemProvider="WATCH_BATTERY" defaultSystemProviderType="RANGED_VALUE" />
+
+            <!-- RANGED_VALUE: Battery, Heart Rate Range, UV Index -->
+            <Complication type="RANGED_VALUE">
+                <!-- Progressive Gauge Arc -->
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Arc centerX="64" centerY="64" width="108" height="108" startAngle="0" endAngle="0" direction="CLOCKWISE">
+                        <Transform target="endAngle" value="clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / (([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) &lt;= 0 ? 1 : ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN])) * 360, 0, 360)" />
+                        <Stroke color="#e2e8f0" thickness="13" cap="BUTT" />
+                    </Arc>
+                </PartDraw>
+                <!-- 24 Radial Slits Mask -->
+                <PartImage x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="@drawable/subdial_clean" />
+                </PartImage>
+                <!-- Monochromatic Icon -->
+                <PartImage x="53" y="24" width="22" height="22">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+                <!-- Telemetry Text -->
+                <PartText x="0" y="69" width="128" height="28">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Text align="CENTER">
+                        <Font family="montserrat_bold" size="21" color="#ffffff">
+                            <Template><![CDATA[%s%s]]>
+                                <Parameter expression="[COMPLICATION.TEXT]" />
+                                <Parameter expression="[COMPLICATION.TITLE]" />
+                            </Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+
+            <!-- GOAL_PROGRESS: Steps Target, Activity Goals -->
+            <Complication type="GOAL_PROGRESS">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Arc centerX="64" centerY="64" width="108" height="108" startAngle="0" endAngle="0" direction="CLOCKWISE">
+                        <Transform target="endAngle" value="clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / ([COMPLICATION.GOAL_PROGRESS_TARGET_VALUE] &lt;= 0 ? 1 : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]) * 360, 0, 360)" />
+                        <Stroke color="#e2e8f0" thickness="13" cap="BUTT" />
+                    </Arc>
+                </PartDraw>
+                <PartImage x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="@drawable/subdial_clean" />
+                </PartImage>
+                <PartImage x="53" y="24" width="22" height="22">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+                <PartText x="0" y="69" width="128" height="28">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Text align="CENTER">
+                        <Font family="montserrat_bold" size="21" color="#ffffff">
+                            <Template><![CDATA[%s%s]]>
+                                <Parameter expression="[COMPLICATION.TEXT]" />
+                                <Parameter expression="[COMPLICATION.TITLE]" />
+                            </Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+
+            <!-- SHORT_TEXT: Temperature, Heart Rate bpm, Step count, Next Event -->
+            <Complication type="SHORT_TEXT">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Ellipse x="0" y="0" width="128" height="128">
+                        <Fill color="#050806" />
+                        <Stroke color="#1e293b" thickness="1.2" />
+                    </Ellipse>
+                </PartDraw>
+                <PartImage x="53" y="22" width="22" height="22">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+                <PartText x="0" y="56" width="128" height="34">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Text align="CENTER">
+                        <Font family="montserrat_bold" size="24" color="#ffffff">
+                            <Template><![CDATA[%s%s]]>
+                                <Parameter expression="[COMPLICATION.TEXT]" />
+                                <Parameter expression="[COMPLICATION.TITLE]" />
+                            </Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+
+            <!-- MONOCHROMATIC_IMAGE: App Shortcut, Icon -->
+            <Complication type="MONOCHROMATIC_IMAGE">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Ellipse x="0" y="0" width="128" height="128">
+                        <Fill color="#050806" />
+                        <Stroke color="#1e293b" thickness="1.2" />
+                    </Ellipse>
+                </PartDraw>
+                <PartImage x="24" y="24" width="80" height="80">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+            </Complication>
+
+            <!-- SMALL_IMAGE: Moon Phase, Celestial Sphere, Photo Image -->
+            <Complication type="SMALL_IMAGE">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Ellipse x="0" y="0" width="128" height="128">
+                        <Fill color="#050806" />
+                        <Stroke color="#1e293b" thickness="1.2" />
+                    </Ellipse>
+                </PartDraw>
+                <PartImage x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.SMALL_IMAGE]" />
+                </PartImage>
+            </Complication>
+
+            <!-- EMPTY: Pure Minimalist Disc -->
+            <Complication type="EMPTY">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial6h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Ellipse x="0" y="0" width="128" height="128">
+                        <Fill color="#050806" />
+                        <Stroke color="#1e293b" thickness="1.2" />
+                    </Ellipse>
+                </PartDraw>
+            </Complication>
+        </ComplicationSlot>
+
+        <!-- 5. Bespoke 9H Solar Subdial (Active when subdial9h == 0) -->
+        <PartDraw x="61" y="169" width="128" height="128">
+            <Variant mode="AMBIENT" target="alpha" value="0" />
+            <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 0) * (1 - [IS_AMBIENT]) * 255" />
+            <Arc centerX="64" centerY="64" width="108" height="108" startAngle="0" endAngle="0" direction="CLOCKWISE">
+                <Transform target="endAngle" value="[HOUR_0_23] * 15 + [MINUTE] * 0.25" />
+                <Stroke color="#e2e8f0" thickness="13" cap="BUTT" />
+            </Arc>
+        </PartDraw>
+        <!-- 9H Slits & Sun Horizon Overlay -->
+        <PartImage x="61" y="169" width="128" height="128">
+            <Variant mode="AMBIENT" target="alpha" value="0" />
+            <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 0) * (1 - [IS_AMBIENT]) * 255" />
+            <Image resource="@drawable/subdial_solar_slits" />
+        </PartImage>
+        <!-- 9H Solar Subdial Text (01:45 in Bold Montserrat 21px) -->
+        <PartText x="61" y="238" width="128" height="28">
+            <Variant mode="AMBIENT" target="alpha" value="0" />
+            <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 0) * (1 - [IS_AMBIENT]) * 255" />
+            <Text align="CENTER">
+                <Font family="montserrat_bold" size="21" color="#ffffff">
+                    <Text align="CENTER">01:45</Text>
+                </Font>
+            </Text>
+        </PartText>
+
+        <!-- Dynamic 9H Complication Slot (Active when subdial9h == 1, Default: STEP_COUNT) -->
+        <ComplicationSlot slotId="2"
+            displayName="@string/complication_9h"
+            x="61" y="169" width="128" height="128"
+            supportedTypes="RANGED_VALUE GOAL_PROGRESS SHORT_TEXT MONOCHROMATIC_IMAGE SMALL_IMAGE EMPTY"
+            isCustomizable="true">
+            <BoundingOval x="0" y="0" width="128" height="128" />
+            <DefaultProviderPolicy defaultSystemProvider="STEP_COUNT" defaultSystemProviderType="RANGED_VALUE" />
+
+            <!-- RANGED_VALUE: Step Goal, Heart Rate Range, Battery, UV Index -->
+            <Complication type="RANGED_VALUE">
+                <!-- Progressive Gauge Arc -->
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Arc centerX="64" centerY="64" width="108" height="108" startAngle="0" endAngle="0" direction="CLOCKWISE">
+                        <Transform target="endAngle" value="clamp(([COMPLICATION.RANGED_VALUE_VALUE] - [COMPLICATION.RANGED_VALUE_MIN]) / (([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN]) &lt;= 0 ? 1 : ([COMPLICATION.RANGED_VALUE_MAX] - [COMPLICATION.RANGED_VALUE_MIN])) * 360, 0, 360)" />
+                        <Stroke color="#e2e8f0" thickness="13" cap="BUTT" />
+                    </Arc>
+                </PartDraw>
+                <!-- 24 Radial Slits Mask -->
+                <PartImage x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="@drawable/subdial_clean" />
+                </PartImage>
+                <!-- Monochromatic Icon -->
+                <PartImage x="53" y="24" width="22" height="22">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+                <!-- Telemetry Text -->
+                <PartText x="0" y="69" width="128" height="28">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Text align="CENTER">
+                        <Font family="montserrat_bold" size="21" color="#ffffff">
+                            <Template><![CDATA[%s%s]]>
+                                <Parameter expression="[COMPLICATION.TEXT]" />
+                                <Parameter expression="[COMPLICATION.TITLE]" />
+                            </Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+
+            <!-- GOAL_PROGRESS: Step Targets, Fitness Goals -->
+            <Complication type="GOAL_PROGRESS">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Arc centerX="64" centerY="64" width="108" height="108" startAngle="0" endAngle="0" direction="CLOCKWISE">
+                        <Transform target="endAngle" value="clamp([COMPLICATION.GOAL_PROGRESS_VALUE] / ([COMPLICATION.GOAL_PROGRESS_TARGET_VALUE] &lt;= 0 ? 1 : [COMPLICATION.GOAL_PROGRESS_TARGET_VALUE]) * 360, 0, 360)" />
+                        <Stroke color="#e2e8f0" thickness="13" cap="BUTT" />
+                    </Arc>
+                </PartDraw>
+                <PartImage x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="@drawable/subdial_clean" />
+                </PartImage>
+                <PartImage x="53" y="24" width="22" height="22">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+                <PartText x="0" y="69" width="128" height="28">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Text align="CENTER">
+                        <Font family="montserrat_bold" size="21" color="#ffffff">
+                            <Template><![CDATA[%s%s]]>
+                                <Parameter expression="[COMPLICATION.TEXT]" />
+                                <Parameter expression="[COMPLICATION.TITLE]" />
+                            </Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+
+            <!-- SHORT_TEXT: Temperature, Heart Rate, Daylight Time, Next Event -->
+            <Complication type="SHORT_TEXT">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Ellipse x="0" y="0" width="128" height="128">
+                        <Fill color="#050806" />
+                        <Stroke color="#1e293b" thickness="1.2" />
+                    </Ellipse>
+                </PartDraw>
+                <PartImage x="53" y="22" width="22" height="22">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+                <PartText x="0" y="56" width="128" height="34">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Text align="CENTER">
+                        <Font family="montserrat_bold" size="24" color="#ffffff">
+                            <Template><![CDATA[%s%s]]>
+                                <Parameter expression="[COMPLICATION.TEXT]" />
+                                <Parameter expression="[COMPLICATION.TITLE]" />
+                            </Template>
+                        </Font>
+                    </Text>
+                </PartText>
+            </Complication>
+
+            <!-- MONOCHROMATIC_IMAGE: App Shortcut, Icon -->
+            <Complication type="MONOCHROMATIC_IMAGE">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Ellipse x="0" y="0" width="128" height="128">
+                        <Fill color="#050806" />
+                        <Stroke color="#1e293b" thickness="1.2" />
+                    </Ellipse>
+                </PartDraw>
+                <PartImage x="24" y="24" width="80" height="80">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.MONOCHROMATIC_IMAGE]" />
+                </PartImage>
+            </Complication>
+
+            <!-- SMALL_IMAGE: Moon Phase, Celestial Sphere, Photo Image -->
+            <Complication type="SMALL_IMAGE">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Ellipse x="0" y="0" width="128" height="128">
+                        <Fill color="#050806" />
+                        <Stroke color="#1e293b" thickness="1.2" />
+                    </Ellipse>
+                </PartDraw>
+                <PartImage x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Image resource="[COMPLICATION.SMALL_IMAGE]" />
+                </PartImage>
+            </Complication>
+
+            <!-- EMPTY: Pure Minimalist Disc -->
+            <Complication type="EMPTY">
+                <PartDraw x="0" y="0" width="128" height="128">
+                    <Variant mode="AMBIENT" target="alpha" value="0" />
+                    <Transform target="alpha" value="([CONFIGURATION.subdial9h] == 1) * (1 - [IS_AMBIENT]) * 255" />
+                    <Ellipse x="0" y="0" width="128" height="128">
+                        <Fill color="#050806" />
+                        <Stroke color="#1e293b" thickness="1.2" />
+                    </Ellipse>
+                </PartDraw>
+            </Complication>
+        </ComplicationSlot>
+
+        <!-- 6. 12H Digital Time (37px Montserrat Bold, Vibrant Orange #ff6b00 with 3D drop shadow) -->
+        <PartText x="133" y="77" width="200" height="48">
+            <Text align="CENTER">
+                <Font family="montserrat_bold" size="37" color="#030805">
+                    <Template><![CDATA[%02d:%02d]]>
+                        <Parameter expression="[HOUR_0_23]" />
+                        <Parameter expression="[MINUTE_Z]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+        <PartText x="133" y="76" width="200" height="48">
+            <Text align="CENTER">
+                <Font family="montserrat_bold" size="37" color="#ff6b00">
+                    <Template><![CDATA[%02d:%02d]]>
+                        <Parameter expression="[HOUR_0_23]" />
+                        <Parameter expression="[MINUTE_Z]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+
+        <!-- 7. 3H Date Window (Tightly grouped on 3H axis, 5px gap, Montserrat Bold!) -->
+        <!-- Shadow -->
+        <PartText x="252" y="215" width="85" height="44">
+            <Text align="END">
+                <Font family="montserrat_bold" size="28" color="#030805">
+                    <Template><![CDATA[%s]]>
+                        <Parameter expression="[DAY_OF_WEEK_S]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+        <PartText x="342" y="215" width="65" height="44">
+            <Text align="START">
+                <Font family="montserrat_bold" size="37" color="#030805">
+                    <Template><![CDATA[%02d]]>
+                        <Parameter expression="[DAY]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+        <!-- Main Texts -->
+        <PartText x="252" y="214" width="85" height="44">
+            <Text align="END">
+                <Font family="montserrat_bold" size="28" color="#94a3b8">
+                    <Template><![CDATA[%s]]>
+                        <Parameter expression="[DAY_OF_WEEK_S]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+        <PartText x="342" y="214" width="65" height="44">
+            <Text align="START">
+                <Font family="montserrat_bold" size="37" color="#ffffff">
+                    <Template><![CDATA[%02d]]>
+                        <Parameter expression="[DAY]" />
+                    </Template>
+                </Font>
+            </Text>
+        </PartText>
+
+
+
+        <!-- 10. Analog Hands: Hour & Minute Hands only (NO central needle!) -->
+        <AnalogClock x="0" y="0" width="466" height="466">
+            <HourHand resource="@drawable/hand_hour" x="221" y="93" width="24" height="160" pivotX="0.5" pivotY="0.875" />
+            <MinuteHand resource="@drawable/hand_minute" x="223" y="40" width="20" height="215" pivotX="0.5" pivotY="0.8977" />
+        </AnalogClock>
+
+        <!-- 11. Minimalist 10px Polished Steel Rivet -->
+        <PartDraw x="228" y="228" width="10" height="10">
+            <Ellipse x="0" y="0" width="10" height="10">
+                <Fill color="#e2e8f0" />
+                <Stroke color="#334155" thickness="0.8" />
+            </Ellipse>
+            <Ellipse x="3.5" y="3.5" width="3" height="3">
+                <Fill color="#0f172a" />
+            </Ellipse>
+        </PartDraw>
+    </Scene>
+</WatchFace>

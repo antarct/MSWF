@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.luxury.fume.emerald"
+    android:versionCode="100"
+    android:versionName="1.0">
+    <uses-sdk android:minSdkVersion="34" android:targetSdkVersion="35" />
+    <uses-feature android:name="android.hardware.type.watch" />
+    <application android:label="@string/watch_face_name" android:icon="@drawable/preview" android:hasCode="false">
+        <property android:name="com.google.wear.watchface.format.version" android:value="2" />
+        <service android:name=".WatchFaceService" android:exported="true" android:permission="android.permission.BIND_WALLPAPER">
+            <intent-filter>
+                <action android:name="android.service.wallpaper.WallpaperService" />
+                <category android:name="com.google.android.wearable.watchface.category.WATCH_FACE" />
+            </intent-filter>
+            <meta-data android:name="android.service.wallpaper" android:resource="@xml/watch_face_info" />
+            <meta-data android:name="com.google.android.wearable.watchface.wearableConfigurationAction" android:value="androidx.wear.watchface.editor.action.WATCH_FACE_EDITOR" />
+        </service>
+    </application>
+</manifest>

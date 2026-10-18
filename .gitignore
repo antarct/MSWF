@@ -1,0 +1,22 @@
+# Build caches and intermediate compilation archives
+wff-project/compiled/
+wff-project/build/
+*.idsig
+*-unsigned.apk
+
+# Heavy binaries (>100MB, automatically downloaded via scripts/get_android_jar.js if missing)
+tools/android.jar
+tools/jre/
+
+# System and logs
+*.log
+.system_generated/
+.DS_Store
+Thumbs.db
+
+# Local secrets and environment
+.env
+.env.*
+
+# Temporary test captures
+dist/galaxy_watch_*.png
